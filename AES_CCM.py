@@ -3,9 +3,10 @@ from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
 from Crypto.Protocol.KDF import PBKDF2
 import binascii
+import AES_CBR
 
 # Key generation
-key = get_random_bytes(16)  # 128-bit key
+key = b'Sixteen byte key'
 nonce = get_random_bytes(13)  # 13-byte nonce
 message = b"Hello, AES-CCM!"  # Your input message
 
@@ -15,8 +16,8 @@ ciphertext = ctr_cipher.encrypt(pad(message, AES.block_size))
 
 # AES-CBC-MAC
 cbc_mac_cipher = AES.new(key, AES.MODE_CBC, iv=bytes(16))
-ciphertext_mac = cbc_mac_cipher.encrypt(ciphertext)
-mac_tag = binascii.hexlify(ciphertext_mac)
+iv = bytes(16)  # 16 bytes of zeros
+mac_tag = AES_CBR.custom_aes_cbc_mac(key, ciphertext, iv)
 
 # Output in hexadecimal
 key_hex = binascii.hexlify(key)
@@ -27,7 +28,7 @@ ciphertext_hex = binascii.hexlify(ciphertext)
 print("Key (hex):", key_hex.decode('utf-8'))
 print("Nonce (hex):", nonce_hex.decode('utf-8'))
 print("Ciphertext (hex):", ciphertext_hex.decode('utf-8'))
-print("MAC Tag (hex):", mac_tag.decode('utf-8'))
+print("MAC Tag (hex):", binascii.hexlify(mac_tag).decode('utf-8'))
 
 # Decryption (reverse the process)
 ctr_cipher = AES.new(key, AES.MODE_CTR, nonce=nonce)
