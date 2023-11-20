@@ -1,7 +1,6 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 from Crypto.Random import get_random_bytes
-from Crypto.Protocol.KDF import PBKDF2
 import binascii
 
 # Key generation
@@ -10,8 +9,27 @@ nonce = get_random_bytes(13)  # 13-byte nonce
 message = b"Hello, AES-CCM!"  # Your input message
 
 # AES-CTR Encryption
-ctr_cipher = AES.new(key, AES.MODE_CTR, nonce=nonce)
-ciphertext = ctr_cipher.encrypt(pad(message, AES.block_size))
+def aes_encrypt_block(block, key):
+    # This function encrypts a single AES block
+    cipher = AES.new(key, AES.MODE_ECB)
+    return cipher.encrypt(block)
+def aes_ctr_encrypt(plaintext, key, nonce):
+    block_size = AES.block_size
+    num_blocks = (len(plaintext) + block_size - 1) // block_size
+
+    # Initialize counters
+    counters = [nonce + (i).to_bytes(8, byteorder='big')[:block_size - len(nonce)] for i in range(num_blocks)]
+
+    # Encrypt each block and XOR with plaintext
+    ciphertext = b''
+    for i in range(num_blocks):
+        keystream_block = aes_encrypt_block(counters[i], key)
+        plaintext_block = plaintext[i * block_size: (i + 1) * block_size]
+        ciphertext_block = bytes(x ^ y for x, y in zip(plaintext_block, keystream_block))
+        ciphertext += ciphertext_block
+    return ciphertext
+
+ciphertext = aes_ctr_encrypt(pad(message, AES.block_size), key, nonce)
 
 # AES-CBC-MAC
 cbc_mac_cipher = AES.new(key, AES.MODE_CBC, iv=bytes(16))
