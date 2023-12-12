@@ -5,11 +5,11 @@ from Crypto.Random import get_random_bytes
 from Crypto.Hash import CMAC
 
 def aes_encrypt_cbc(key, plaintext):
-    cipher = AES.new(key, AES.MODE_CBC)
+    cipher = AES.new(key, AES.MODE_ECB)
     return cipher.encrypt(plaintext)
 
 def aes_encrypt_ctr(key, plaintext):
-    cipher = AES.new(key, AES.MODE_CTR)
+    cipher = AES.new(key, AES.MODE_ECB)
     return cipher.encrypt(plaintext)
 
 def generate_ctr_blocks(nonce, num_blocks):
@@ -42,9 +42,9 @@ def cmac_algorithm(key, nonce, blocks):
     return Encrypted_Tag
 
 # Example usage:
-key = get_random_bytes(16)
-nonce = get_random_bytes(16)
-plaintext_blocks = [get_random_bytes(16) for _ in range(4)]
+key = b'\x01' * 16   #get_random_bytes(16)
+nonce = b'\x02' * 16   #get_random_bytes(16)
+plaintext_blocks = [b'\x03' * 16, b'\x04' * 16, b'\x05' * 16, b'\x06' * 16]   #[get_random_bytes(16) for _ in range(4)]
 
 # Step 1: Generate Counter Blocks
 counter_blocks = generate_ctr_blocks(nonce, len(plaintext_blocks) + 1)
